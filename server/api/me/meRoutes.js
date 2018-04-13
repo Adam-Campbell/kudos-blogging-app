@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const controller = require('./meController');
-const auth = require('../../auth/auth');
 const passport = require('passport');
 const upload = require('../../middleware/multerConfig');
 

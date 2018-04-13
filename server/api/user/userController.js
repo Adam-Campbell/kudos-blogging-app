@@ -4,11 +4,12 @@ const Comment = require('../comment/commentModel');
 const Follow = require('../follow/followModel');
 const Kudos = require('../kudos/kudosModel');
 const Highlight = require('../highlight/highlightModel');
+const mergeApprovedFields = require('../../util/helpers').mergeApprovedFields;
 
 
 exports.params = async (req, res, next, id) => {
     try {
-        const user = await User.findById(id, {password: 0})
+        const user = await User.findById(id)
         .exec();
 
         if (!user) {
@@ -25,7 +26,6 @@ exports.params = async (req, res, next, id) => {
 exports.get = async (req, res, next) => {
     try {
         const users = await User.find({})
-        .select('-password -resetPasswordToken -resetPasswordTokenExpiration')
         .exec();
 
         res.json(users);
@@ -54,9 +54,16 @@ exports.getOne = async (req, res, next) => {
 
 
 exports.post = async (req, res, next) => {
+    const { username, email, password } = req.body;
+    if (!username || !password || !email) {
+        return res.status(400).send('You need to supply a username, email address and password.');
+    }
+
     try {
         const newUser = await User.create({
-            ...req.body
+            username,
+            password,
+            email
         });
         const userObject = newUser.toObject();
         delete userObject.password;
@@ -70,7 +77,7 @@ exports.post = async (req, res, next) => {
 exports.getUsersPosts = async (req, res, next) => {
     try {
         const posts = await Post.find({author: req.user._id})
-        .populate('author', {password: 0})
+        .populate('author')
         .exec();
 
         res.json(posts);
@@ -83,7 +90,7 @@ exports.getUsersPosts = async (req, res, next) => {
 exports.getUsersComments = async (req, res, next) => {
     try {
         const comments = await Comment.find({author: req.user._id})
-        .populate('author', {password: 0})
+        .populate('author')
         .exec();
 
         res.json(comments);
@@ -110,10 +117,10 @@ exports.getKudos = async (req, res, next) => {
         const kudos = await Kudos.find({user: req.user._id})
         .populate({
             path: 'post',
+            select: '-text',
             populate: {
-                path: 'author',
-                select: '-password',
-            },
+                path: 'author'
+            }
         })
         .exec();
 
@@ -126,14 +133,13 @@ exports.getKudos = async (req, res, next) => {
 exports.getHighlights = async (req, res, next) => {
     try {
         const highlights = await Highlight.find({user: req.user._id})
-        .populate('user', {password: 0})
+        .populate('user')
         .populate({
             path: 'post',
             select: '-text',
             populate: {
-                path: 'author',
-                select: '-password',
-            },
+                path: 'author'
+            }
         })
         .exec();
 

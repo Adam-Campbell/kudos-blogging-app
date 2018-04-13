@@ -7,6 +7,10 @@ const config = {
   expiresIn: 60 * 60,
   secrets: {
     jwt: process.env.JWT || 'gumball'
+  },
+  googleAuth: {
+    clientId: process.env.googleClientId,
+    clientSecret: process.env.googleClientSecret
   }
 };
 

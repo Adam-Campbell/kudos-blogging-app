@@ -5,6 +5,7 @@ const Comment = require('../comment/commentModel');
 const Kudos = require('../kudos/kudosModel');
 const Highlight = require('../highlight/highlightModel');
 const config = require('../../config/config');
+const mergeApprovedFields = require('../../util/helpers').mergeApprovedFields;
 
 exports.get = async (req, res, next) => {
     const currentUser = req.currentUser.toObject();
@@ -29,21 +30,14 @@ exports.get = async (req, res, next) => {
 // body they will just de ignored. 
 
 exports.put = async (req, res, next) => {
-    // The array contains all accepted fields that the user can edit. The reduce turns this array
-    // into an object containing any fields from the array that the client sent in req.body and
-    // excluding the rest. Object.assign then merges these fields into the currentUser and then
-    // save is called on the currentUser. The advantage of this approach is that as the object
-    // grows more complex and more fields are added, the only change needed in this function
-    // is to add the field names into the acceptedFields array.
-    const acceptedFields = ['username', 'email', 'bio'].reduce((acc, field, index, arr) => {
-        if (req.body[field]) {
-            acc[field] = req.body[field];
-        }
-        return acc;
-    }, {});
-    const currentUser = Object.assign(req.currentUser, acceptedFields);
     try {
-        const savedUser = await currentUser.save();
+        const savedUser = await mergeApprovedFields(
+            ['username', 'email', 'bio'],
+            req.body,
+            req.currentUser
+        )
+        .save();
+
         currentUserObject = savedUser.toObject();
         delete currentUserObject.password;
         delete currentUserObject.resetPasswordToken;
@@ -51,15 +45,16 @@ exports.put = async (req, res, next) => {
         res.json(currentUserObject);
     } catch (err) {
         next(err);
-    }
+    }   
 }
+
 
 exports.updatePassword = async (req, res, next) => {
     // Needs old password and new password attached to request.
     if (!req.body.old || !req.body.new) {
         return res.status(400).send('Please supply both the current password and the new password.');
     }
-    const fullUser = await User.findById(req.currentUser._id);
+    const fullUser = await User.findById(req.currentUser._id).select('+password').exec();
     // Check if old password matches the hashed password in DB. If not then send back error.
     if (!fullUser.authenticate(req.body.old)) {
         return res.status(401).send('Incorrect password');
@@ -176,7 +171,7 @@ exports.delete = async (req, res, next) => {
 
 exports.checkUserExists = async (req, res, next) => {
     try {
-        const user = await User.findById(req.params.userId, {password: 0});
+        const user = await User.findById(req.params.userId).exec();
         if (!user) {
             return next(new Error('No user with that id'));
         }
@@ -245,7 +240,7 @@ exports.unfollowUser = async (req, res, next) => {
 exports.checkPostExists = async (req, res, next) => {
     try {
         const post = await Post.findById(req.params.postId)
-        .populate('author', {password: 0})
+        .populate('author')
         .exec();
         if (!post) {
             return next(new Error('No post with that id'));
@@ -378,7 +373,6 @@ exports.updateImage = async (req, res, next) => {
             {avatar: `${config.staticUrl}${req.file.filename}`},
             {upsert: true, new: true}
         )
-        .select('-password')
         .exec();
         res.json(updated);
     } catch (err) {

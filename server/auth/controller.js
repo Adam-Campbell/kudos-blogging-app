@@ -1,5 +1,7 @@
 const User = require('../api/user/userModel');
-const signToken = require('./auth').signToken;
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
+//const signToken = require('./auth').signToken;
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
@@ -30,21 +32,20 @@ exports.sendResetPasswordEmail = (req, res, next) => {
 };
 
 exports.verifyByEmailAndUpdate = async (req, res, next) => {
-  const user = await User.findOne({email: req.body.email});
+  const user = await User.findOne({email: req.body.email}).exec();
   if (!user) {
     return res.status(401).send('No user with that email.');
   }
   const token = crypto.randomBytes(20).toString('hex');
   user.resetPasswordToken = token;
   user.resetPasswordTokenExpiration = Date.now() + 3600000;
-  user.save((err, user) => {
-    if (err) {
-      next(err);
-    } else {
-      req.currentUser = user;
-      next();
-    }
-  });
+  try {
+    const saved = await user.save();
+    req.currentUser = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
 };
 
 exports.verifyByTokenAndUpdate = async (req, res, next) => {
@@ -58,19 +59,39 @@ exports.verifyByTokenAndUpdate = async (req, res, next) => {
   user.password = req.body.password;
   user.resetPasswordToken = null;
   user.resetPasswordTokenExpiration = null;
-  user.save((err, saved) => {
-    if (err) {
-      return next(err);
-    }
+  try {
+    const saved = await user.save();
     userObject = saved.toObject();
     delete userObject.password;
     delete userObject.resetPasswordToken;
     delete userObject.resetPasswordTokenExpiration;
     res.json(userObject);
-  })
+  } catch (err) {
+    next(err);
+  }
 }
+
+// exports.signin = (req, res, next) => {
+//   const token = jwt.sign(
+//     {_id: req.currentUser._id},
+//     config.secrets.jwt,
+//     {expiresIn: config.expiresIn}
+//   );
+//   res.json({token: token});
+// }
+
+const signToken = id => {
+  return jwt.sign(
+    {_id: id},
+    config.secrets.jwt,
+    {expiresIn: config.expiresIn}
+  );
+}
+
+exports.signToken = signToken;
 
 exports.signin = (req, res, next) => {
   const token = signToken(req.currentUser._id);
   res.json({token: token});
-};
+}
+

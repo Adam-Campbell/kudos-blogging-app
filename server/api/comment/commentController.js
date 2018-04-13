@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
 const Comment = require('./commentModel');
+const mergeApprovedFields = require('../../util/helpers').mergeApprovedFields;
 
 exports.params = async (req, res, next, id) => {
     try {
         const comment = await Comment.findById(id)
-        .populate('author', {password: 0})
+        .populate('author')
         .exec();
 
         if (!comment) {
@@ -20,7 +21,7 @@ exports.params = async (req, res, next, id) => {
 exports.get = async (req, res, next) => {
     try {
         const comments = await Comment.find({})
-        .populate('author', {password: 0})
+        .populate('author')
         .exec();
 
         res.json(comments);
@@ -39,22 +40,9 @@ exports.put = async (req, res, next) => {
     if (!req.comment.author._id.equals(req.currentUser._id)) {
         return res.status(401).send();
     }
-    // The array contains all accepted fields that the user can edit. The reduce turns this array
-    // into an object containing any fields from the array that the client sent in req.body and
-    // excluding the rest. Object.assign then merges these fields into the comment and then calls
-    // save. The advantage of this approach is that as the object grows more complex and more 
-    // fields are added, the only change needed in this function is to add the field names into 
-    // the acceptedFields array.
-    const acceptedFields = ['text'].reduce((acc, field, index, arr) => {
-        if (req.body[field]) {
-            acc[field] = req.body[field];
-        }
-        return acc;
-    }, {});
-    const comment = Object.assign(req.comment, acceptedFields);
 
     try {
-        const saved = await comment.save();
+        const saved = await mergeApprovedFields(['text'], req.body, req.comment).save();
         res.json(saved);
     } catch (err) {
         next(err);
@@ -66,10 +54,13 @@ exports.put = async (req, res, next) => {
 // backend. 
 
 exports.post = async (req, res, next) => {
+    if (!req.body.text) {
+        return res.status(400).send("You didn't supply any text for the comment.");
+    }
     const objectId = mongoose.Types.ObjectId();
     try {
         const newComment = await Comment.create({
-            ...req.body, 
+            text: req.body.text, 
             _id: objectId,
             author: req.user._id,
             discussion: req.comment.discussion,

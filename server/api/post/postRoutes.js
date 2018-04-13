@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const logger = require('../../util/logger');
 const controller = require('./postController');
-const auth = require('../../auth/auth');
 const passport = require('passport');
 
 router.param('id', controller.params);

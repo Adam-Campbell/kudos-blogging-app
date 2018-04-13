@@ -1,12 +1,12 @@
 const router = require('express').Router();
-const verifyUser = require('./auth').verifyUser;
 const controller = require('./controller');
 const passport = require('passport');
-const signToken = require('./auth').signToken;
-const User = require('../api/user/userModel');
 
-router.post('/signin', passport.authenticate('local'), controller.signin);
+router.post('/signin', passport.authenticate('local', {session: false}), controller.signin);
 router.post('/forgot', controller.verifyByEmailAndUpdate, controller.sendResetPasswordEmail);
 router.post('/reset/:resetPasswordToken', controller.verifyByTokenAndUpdate);
+
+router.get('/google', passport.authenticate('google', { scope: ['profile'], session: false }));
+router.get('/google/success', passport.authenticate('google', { session: false }), controller.signin);
 
 module.exports = router;
