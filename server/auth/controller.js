@@ -1,7 +1,6 @@
 const User = require('../api/user/userModel');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-//const signToken = require('./auth').signToken;
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
@@ -70,15 +69,6 @@ exports.verifyByTokenAndUpdate = async (req, res, next) => {
     next(err);
   }
 }
-
-// exports.signin = (req, res, next) => {
-//   const token = jwt.sign(
-//     {_id: req.currentUser._id},
-//     config.secrets.jwt,
-//     {expiresIn: config.expiresIn}
-//   );
-//   res.json({token: token});
-// }
 
 const signToken = id => {
   return jwt.sign(

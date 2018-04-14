@@ -1,23 +1,23 @@
 /*
-    Function takes an object and removes any properties which aren't
-    on an approved list of properties, and then merges the stripped 
-    version into a target object via Object.assign(). Returns a reference 
-    to the object to enable chaining if desired. 
+    Function takes an array of approved fields, an object containing
+    data that you want to copy, and an object you want to copy the
+    data onto. It loops through every key on the data object and copies
+    it to target object only if the key appears in the approved fields
+    array.
 
     Args:
 
-    fieldsArr - an array of the accepted fields.
-    dataObject - the original object that you want to strip down.
-    target - the target object which is returend at the end.
+    fieldsArr - an array of the approved fields.
+    dataObject - the original object that you want to take data from.
+    target - the target object the data is added to, returned at the end.
 */
 
+
 exports.mergeApprovedFields = (fieldsArr, dataObject, target) => {
-    const trimmedDataObject = fieldsArr.reduce((acc, field, index, arr) => {
-        if (dataObject[field]) {
-            acc[field] = dataObject[field];
+    for (const prop in dataObject) {
+        if (fieldsArr.indexOf(prop) !== -1) {
+            target[prop] = dataObject[prop];
         }
-        return acc;
-    }, {});
-    const modified = Object.assign(target, trimmedDataObject);
-    return modified;
+    }
+    return target;
 }

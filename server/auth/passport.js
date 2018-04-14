@@ -6,19 +6,6 @@ const ExtractJwt = require('passport-jwt').ExtractJwt;
 const User = require('../api/user/userModel');
 const config = require('../config/config');
 
-
-// passport.serializeUser(function(user, cb) {
-//     cb(null, user._id);
-// });
-  
-// // I don't think this is necessary as I'm not using sessions.
-// passport.deserializeUser(function(_id, cb) {
-//     User.findById(_id, function (err, user) {
-//         if (err) { return cb(err); }
-//             cb(null, user);
-//     });
-// });
-
 passport.use(new LocalStrategy({
         passReqToCallback: true,
         session: false
@@ -74,7 +61,7 @@ passport.use(new GoogleStrategy({
         passReqToCallback: true
     },
     async (req, accessToken, refreshToken, profile, done) => {
-        //console.log(profile);
+        
         try {
             const existingUser = await User.findOne({googleId: profile.id}).exec();
             
@@ -102,4 +89,4 @@ passport.use(new GoogleStrategy({
             done(err, false);
         }
     }
-))
+));
