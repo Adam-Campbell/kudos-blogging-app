@@ -7,6 +7,18 @@ const config = {
   expiresIn: 60 * 60,
   secrets: {
     jwt: process.env.JWT || 'gumball'
+  },
+  googleAuth: {
+    clientId: process.env.googleClientId,
+    clientSecret: process.env.googleClientSecret
+  },
+  twitterAuth: {
+    clientId: process.env.twitterClientId,
+    clientSecret: process.env.twitterClientSecret
+  },
+  facebookAuth: {
+    clientId: process.env.facebookClientId,
+    clientSecret: process.env.facebookCLientSecret
   }
 };
 

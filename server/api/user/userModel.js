@@ -11,12 +11,11 @@ const UserSchema = new Schema({
 
     password: {
         type: String,
-        required: true
+        select: false
     },
 
     email: {
-        type: String,
-        required: true
+        type: String
     },
 
     bio: {
@@ -34,11 +33,18 @@ const UserSchema = new Schema({
     },
 
     resetPasswordToken: {
-        type: String
+        type: String,
+        select: false
     },
 
     resetPasswordTokenExpiration: {
-        type: Date
+        type: Date,
+        select: false
+    }, 
+
+    googleId: {
+        type: String,
+        select: false
     }
    
 });

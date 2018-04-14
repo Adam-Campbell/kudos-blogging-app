@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const controller = require('./commentController');
-const auth = require('../../auth/auth');
 const passport = require('passport');
 
 router.param('id', controller.params)

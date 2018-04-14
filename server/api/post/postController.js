@@ -3,6 +3,7 @@ const Post = require('./postModel');
 const Comment = require('../comment/commentModel');
 const Kudos = require('../kudos/kudosModel');
 const logger = require('../../util/logger');
+const mergeApprovedFields = require('../../util/helpers').mergeApprovedFields;
 
 
 // helper function for converting comments collection into a threaded collection.
@@ -31,26 +32,10 @@ const makeThreaded = comments => {
 }
 
 
-// exports.params = (req, res, next, id) => {
-//     Post.findById(id)
-//     .populate('author', {password: 0})
-//     .exec()
-//     .then(post => {
-//         if (!post) {
-//             next(new Error('No post with that id'));
-//         } else {
-//             req.post = post;
-//             next();
-//         }
-//     }, err => {
-//         next(new Error("The post id supplied wasn't valid"));
-//     });
-// };
-
 exports.params = async (req, res, next, id) => {
     try {
         const post = await Post.findById(id)
-        .populate('author', {password: 0})
+        .populate('author')
         .exec();
 
         if (!post) {
@@ -67,21 +52,6 @@ exports.params = async (req, res, next, id) => {
 // If you hit this endpoint without using a query string it will give you
 // all posts from all categories. If you hit it with a query string containing
 // a valid category it will give you only the posts for that category. 
-// exports.get = (req, res, next) => {
-//     let query = req.query.category ?
-//     { categories: req.query.category } :
-//     {};
-
-//     Post.find(query)
-//     .populate('author', {password: 0})
-//     .exec()
-//     .then(posts => {
-//         res.json(posts);
-//     }, err => {
-//         next(err);
-//     });
-// };
-
 exports.get = async (req, res, next) => {
     // set query to the supplied category if there was one, or else
     // just an empty object.
@@ -91,7 +61,7 @@ exports.get = async (req, res, next) => {
 
     try {
         const posts = await Post.find(query)
-        .populate('author', {password: 0})
+        .populate('author')
         .exec();
 
         res.json(posts);
@@ -107,64 +77,36 @@ exports.getOne = (req, res, next) => {
     res.json(post);
 };
 
-// exports.put = (req, res, next) => {
-//     if (!req.post.author._id.equals(req.currentUser._id)) {
-//         return res.status(401).send();
-//     } 
-//     const post = Object.assign(req.post, req.body);
-//     post.save((err, saved) => {
-//         if (err) {
-//             next(err);
-//         } else {
-//             res.json(saved);
-//         }
-//     });  
-// }
-
 exports.put = async (req, res, next) => {
     // Check that the current user is actually the author of this post
     if (!req.post.author._id.equals(req.currentUser._id)) {
         return res.status(401).send();
     }
-    // The array contains all accepted fields that the user can edit. The reduce turns this array
-    // into an object containing any fields from the array that the client sent in req.body and
-    // excluding the rest. Object.assign then merges these fields into the post and then calls
-    // save The advantage of this approach is that as the object grows more complex and more 
-    // fields are added, the only change needed in this function is to add the field names into 
-    // the acceptedFields array.
-    const acceptedFields = ['title', 'text', 'categories'].reduce((acc, field, index, arr) => {
-        if (req.body[field]) {
-            acc[field] = req.body[field];
-        }
-        return acc;
-    }, {});
-    const post = Object.assign(req.post, acceptedFields);
 
     try {
-        const saved = await post.save();
+        const saved = await mergeApprovedFields(
+            ['title', 'text', 'categories'],
+            req.body, 
+            req.post
+        )
+        .save();
+
         res.json(saved);
     } catch (err) {
         next(err);
     }
 }
 
-// exports.post = (req, res, next) => {
-//     Post.create({
-//         ...req.body,
-//         author: req.currentUser._id
-//     })
-//     .then(post => {
-//         res.json(post);
-//     }, err => {
-//         logger.error(err);
-//         next(err);
-//     });
-// };
-
 exports.post = async (req, res, next) => {
+    const strippedBody = mergeApprovedFields(
+        ['title', 'text', 'categories'],
+        req.body,
+        {}
+    );
+
     try {
         const post = await Post.create({
-            ...req.body,
+            ...strippedBody,
             author: req.currentUser._id
         });
         res.json(post);
@@ -172,19 +114,6 @@ exports.post = async (req, res, next) => {
         next(err);
     }
 }
-
-// exports.delete = (req, res, next) =>{
-//     if (!req.post.author._id.equals(req.currentUser._id)) {
-//         return res.status(401).send();
-//     }
-//     req.post.remove(function(err, removed) {
-//         if (err) {
-//             next(err);
-//         } else {
-//             res.json(removed);
-//         }
-//     });
-// };
 
 exports.delete = async (req, res, next) => {
     // Check that the current user is actually the author of this post
@@ -201,23 +130,10 @@ exports.delete = async (req, res, next) => {
 }
 
 
-// exports.getComments = (req, res, next) => {
-//     Comment.find({discussion: req.post._id})
-//     .populate('author', {password: 0})
-//     .lean()
-//     .exec()
-//     .then(comments => {
-//         const threaded = makeThreaded(comments);
-//         res.json(threaded);
-//     }, err => {
-//         next(err)
-//     });
-// }
-
 exports.getComments = async (req, res, next) => {
     try {
         const comments = await Comment.find({discussion: req.post._id})
-        .populate('author', {password: 0})
+        .populate('author')
         .lean()
         .exec();
 
@@ -232,29 +148,14 @@ exports.getComments = async (req, res, next) => {
 // You need to supply 'text' and in request body, however 'parents',
 // 'createdAt', 'updatedAt', 'author' and 'discussion' are all taken care of on the  
 // backend. 
-
-// exports.postComment = async (req, res, next) => {
-//     const objectId = mongoose.Types.ObjectId();
-    
-//     Comment.create({
-//         ...req.body,
-//         author: req.user._id,
-//         discussion: req.params.id,
-//         _id: objectId,
-//         parents: [objectId],
-//     })
-//     .then(comment => {
-//         res.json(comment);
-//     }, err => {
-//         next(err);
-//     });   
-// };
-
 exports.postComment = async (req, res, next) => {
+    if (!req.body.text) {
+        return res.status(400).send("You didn't supply any text for the comment.");
+    }
     const objectId = mongoose.Types.ObjectId();
     try {
         const newComment = await Comment.create({
-            ...req.body,
+            text: req.body.text,
             author: req.user._id,
             discussion: req.post._id,
             _id: objectId,

@@ -12,7 +12,6 @@ chai.use(chaiHttp);
 
 describe('posts', () => {
     let ids;
-    const newPostId = mongoose.Types.ObjectId();
     let joesToken;
     let janesToken;
     before(async () => {
@@ -74,13 +73,13 @@ describe('posts', () => {
             .send({
                 "title": "Newly created post",
                 "text": "Created inside test suite",
-                "author": ids.joesId.toString(),
-                "_id": newPostId.toString(),
                 "categories": ['nodejs']
             });
 
             expect(response.status).to.equal(200);
-            expect(response.body._id).to.equal(newPostId.toString());
+            expect(response.body.author).to.equal(ids.joesId.toString());
+            expect(response.body.title).to.equal('Newly created post');
+            expect(response.body.text).to.equal('Created inside test suite');
 
         });
         it("should return an error if the categories supplied aren't valid", async () => {
@@ -90,8 +89,6 @@ describe('posts', () => {
             .send({
                 "title": "Newly created post",
                 "text": "Created inside test suite",
-                "author": ids.joesId.toString(),
-                "_id": newPostId.toString(),
                 "categories": ['jquery']
             });
 
@@ -102,7 +99,7 @@ describe('posts', () => {
     describe('update a post', () => {
         it('should return the updated post if the current user is authorized to update it', async () => {
             const response = await chai.request(app)
-            .put(`/api/posts/${newPostId.toString()}`)
+            .put(`/api/posts/${ids.joesPostId.toString()}`)
             .set('Authorization', `Bearer ${joesToken}`)
             .send({"text": "Edited inside test suite"});
 
@@ -116,29 +113,11 @@ describe('posts', () => {
             janesToken = tokenResponse.body.token;
             
             const response = await chai.request(app)
-            .put(`/api/posts/${newPostId.toString()}`)
+            .put(`/api/posts/${ids.joesPostId.toString()}`)
             .set('Authorization', `Bearer ${janesToken}`)
             .send({"text": "Edited by Jane"});
 
             expect(response.status).to.equal(401);
-        });
-    });
-
-    describe('delete a post', () => {
-        it("should return an error if the current user isn't authorized to delete it", async () => {
-            const response = await chai.request(app)
-            .delete(`/api/posts/${newPostId.toString()}`)
-            .set('Authorization', `Bearer ${janesToken}`);
-
-            expect(response.status).to.equal(401);
-        });
-        it('should return the deleted post if the current user is authorized to delete it', async () => {
-            const response = await chai.request(app)
-            .delete(`/api/posts/${newPostId.toString()}`)
-            .set('Authorization', `Bearer ${joesToken}`);
-
-            expect(response.status).to.equal(200);
-            expect(response.body._id).to.equal(newPostId.toString());
         });
     });
     
@@ -179,4 +158,23 @@ describe('posts', () => {
             expect(response.body.discussion).to.equal(ids.joesPostId.toString());
         });
     });
+
+    describe('delete a post', () => {
+        it("should return an error if the current user isn't authorized to delete it", async () => {
+            const response = await chai.request(app)
+            .delete(`/api/posts/${ids.joesPostId.toString()}`)
+            .set('Authorization', `Bearer ${janesToken}`);
+
+            expect(response.status).to.equal(401);
+        });
+        it('should return the deleted post if the current user is authorized to delete it', async () => {
+            const response = await chai.request(app)
+            .delete(`/api/posts/${ids.joesPostId.toString()}`)
+            .set('Authorization', `Bearer ${joesToken}`);
+
+            expect(response.status).to.equal(200);
+            expect(response.body._id).to.equal(ids.joesPostId.toString());
+        });
+    });
+
 });
