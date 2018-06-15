@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const controller = require('./meController');
 const passport = require('passport');
-const upload = require('../../middleware/multerConfig');
+//const upload = require('../../middleware/multerConfig');
+const upload = require('./avatarUpdateMulterConfig');
 
 
 router.param('userId', controller.checkUserExists);
@@ -15,15 +16,24 @@ router.route('/')
 router.route('/password')
     .put(passport.authenticate('jwt', {session: false}), controller.updatePassword)
 
+router.route('/follows')
+    .get(passport.authenticate('jwt', {session: false}), controller.getAllFollows)
+
 router.route('/follows/:userId')
     .get(passport.authenticate('jwt', {session: false}), controller.findFollow, controller.checkIfFollowingUser)
     .put(passport.authenticate('jwt', {session: false}), controller.findFollow, controller.followUser)
     .delete(passport.authenticate('jwt', {session: false}), controller.findFollow, controller.unfollowUser)
 
+router.route('/kudos')
+    .get(passport.authenticate('jwt', {session: false}), controller.getAllKudos)
+
 router.route('/kudos/:postId')
     .get(passport.authenticate('jwt', {session: false}), controller.findKudos, controller.checkIfKudosGiven)
     .put(passport.authenticate('jwt', {session: false}), controller.findKudos, controller.giveKudos)
     .delete(passport.authenticate('jwt', {session: false}), controller.findKudos, controller.removeKudos)
+
+router.route('/highlights')
+    .get(passport.authenticate('jwt', {session: false}), controller.getAllHighlights)
 
 router.route('/highlights/:postId')
     .get(passport.authenticate('jwt', {session: false}), controller.getAllHighlightsForPost) 

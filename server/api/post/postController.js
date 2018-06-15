@@ -56,7 +56,7 @@ exports.get = async (req, res, next) => {
     // set query to the supplied category if there was one, or else
     // just an empty object.
     const query = req.query.category ?
-    { categories: req.query.category } :
+    { category: req.query.category } :
     {};
 
     try {
@@ -85,7 +85,7 @@ exports.put = async (req, res, next) => {
 
     try {
         const saved = await mergeApprovedFields(
-            ['title', 'text', 'categories'],
+            ['title', 'text', 'category', 'description', 'image'],
             req.body, 
             req.post
         )
@@ -97,9 +97,60 @@ exports.put = async (req, res, next) => {
     }
 }
 
+
+// exports.put = async (req, res, next) => {
+//     // Check that the current user is actually the author of this post
+//     if (!req.post.author._id.equals(req.currentUser._id)) {
+//         return res.status(401).send();
+//     }
+
+//     // If a file was sent as part of the form then we set the url on req.body
+//     if (req.file && req.file.filename) {
+//         req.body.image = `http://localhost:5000/${req.file.filename}`;
+//     } else {
+//         // however even if there wasn't a file present multer will still add an image property
+//         // to req.body, so we delete it to prevent any complications.
+//         delete req.body.image;
+//     }
+
+//     try {
+//         const saved = await mergeApprovedFields(
+//             ['title', 'text', 'category', 'description', 'image'],
+//             req.body, 
+//             req.post
+//         )
+//         .save();
+
+//         res.json(saved);
+//     } catch (err) {
+//         next(err);
+//     }
+// }
+
+// exports.post = async (req, res, next) => {
+//     if (req.file.filename) {
+//         req.body.image = `http://localhost:5000/${req.file.filename}`;
+//     } 
+//     const strippedBody = mergeApprovedFields(
+//         ['title', 'text', 'category', 'description', 'image'],
+//         req.body,
+//         {}
+//     );
+
+//     try {
+//         const post = await Post.create({
+//             ...strippedBody,
+//             author: req.currentUser._id
+//         });
+//         res.json(post);
+//     } catch (err) {
+//         next(err);
+//     }
+// }
+
 exports.post = async (req, res, next) => {
     const strippedBody = mergeApprovedFields(
-        ['title', 'text', 'categories'],
+        ['title', 'text', 'category', 'description', 'image'],
         req.body,
         {}
     );
@@ -137,8 +188,9 @@ exports.getComments = async (req, res, next) => {
         .lean()
         .exec();
 
-        const threaded = makeThreaded(comments);
-        res.json(threaded);
+        //const threaded = makeThreaded(comments);
+        //res.json(threaded);
+        res.json(comments);
     } catch (err) {
         next(err);
     }
@@ -152,6 +204,7 @@ exports.postComment = async (req, res, next) => {
     if (!req.body.text) {
         return res.status(400).send("You didn't supply any text for the comment.");
     }
+
     const objectId = mongoose.Types.ObjectId();
     try {
         const newComment = await Comment.create({

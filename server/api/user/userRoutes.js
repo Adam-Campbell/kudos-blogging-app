@@ -1,13 +1,14 @@
 const router = require('express').Router();
 const logger = require('../../util/logger');
 const controller = require('./userController');
-
+const passport = require('passport');
+const signin = require('../../auth/controller').signin;
 
 router.param('id', controller.params);
 
 router.route('/')
     .get(controller.get)
-    .post(controller.post)
+    .post(controller.post, passport.authenticate('local', {session: false}), signin)
 
 router.route('/:id')
     .get(controller.getOne)

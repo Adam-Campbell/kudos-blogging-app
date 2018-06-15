@@ -14,12 +14,13 @@ exports.sendResetPasswordEmail = (req, res, next) => {
         pass: process.env.password
     }
   });
+  //http://${req.headers.host}/auth/reset/${req.currentUser.resetPasswordToken}
   const mailOptions = {
     to : req.body.email,
     subject : 'Password reset email',
     text : `Click the link below to reset your password:
     
-      http://${req.headers.host}/auth/reset/${req.currentUser.resetPasswordToken}
+      http://localhost:3000/reset/${req.currentUser.resetPasswordToken}
     `
   };
   smtpTransport.sendMail(mailOptions, (err, response) => {

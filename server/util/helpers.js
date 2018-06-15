@@ -15,6 +15,7 @@
 
 exports.mergeApprovedFields = (fieldsArr, dataObject, target) => {
     for (const prop in dataObject) {
+        console.log(prop);
         if (fieldsArr.indexOf(prop) !== -1) {
             target[prop] = dataObject[prop];
         }

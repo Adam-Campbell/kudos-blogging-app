@@ -8,6 +8,14 @@ const PostSchema = new Schema({
         unique: true
     },
 
+    description: {
+        type: String
+    },
+
+    image: {
+        type: String
+    },
+
     text: {
         type: String,
         required: true
@@ -18,10 +26,24 @@ const PostSchema = new Schema({
     // I should make categories an array of strings, and validate each one
     // againt a regex containing all the categories I have. 
     //categories: [{type: Schema.Types.ObjectId, ref: 'category'}]
-    categories:[{
+    category: {
         type: String,
-        enum: ['javascript', 'css', 'reactjs', "html", "sass", "nodejs"]
-    }]
+        enum: [
+            'javascript', 
+            'fantasy', 
+            'games', 
+            'news',
+            'fashion',
+            'travel',
+            'motivation',
+            'relationships',
+            'design',
+            'politics',
+            'mentalhealth',
+            'music'
+        ]
+    }
+
 });
 
 module.exports = mongoose.model('post', PostSchema);
