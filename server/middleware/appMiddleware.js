@@ -7,7 +7,7 @@ require('../auth/passport');
 // setup global middleware here
 
 module.exports = app => {
-  if (config.logger) {
+  if (config.logging) {
     app.use(morgan('dev'));
   }
   app.use(bodyParser.urlencoded({ extended: true }));

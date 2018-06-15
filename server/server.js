@@ -33,10 +33,13 @@ app.use(function(err, req, res, next) {
   let status = 500;
   if (err.message === 'Invalid file type submitted') {
     status = 400;
+  } else if (err.message === 'Duplicate username') {
+    status = 422
   }
   
   logger.error(err.stack);
   res.status(status).send(err.message);
+  //res.status(status).json({error: err.message});
   
 });
 

@@ -78,8 +78,13 @@ exports.delete = async (req, res, next) => {
         return res.status(401).send();
     }
     try {
-        const removed = await req.comment.remove();
-        res.json(removed);
+        //const removed = await req.comment.remove();
+        //res.json(removed);
+        const comment = req.comment;
+        comment.author = null;
+        comment.text = 'Deleted';
+        await comment.save();
+        res.json(comment);
     } catch (err) {
         next(err);
     }

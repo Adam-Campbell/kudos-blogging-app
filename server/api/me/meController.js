@@ -7,22 +7,27 @@ const Highlight = require('../highlight/highlightModel');
 const config = require('../../config/config');
 const mergeApprovedFields = require('../../util/helpers').mergeApprovedFields;
 
+// exports.get = async (req, res, next) => {
+//     const currentUser = req.currentUser.toObject();
+//     try {
+//         const followersReq = Follow.count({followee: req.currentUser._id});
+//         const followingReq = Follow.count({follower: req.currentUser._id});
+//         const followersRes = await followersReq;
+//         const followingRes = await followingReq;
+//         const finalCurrentUserObject = {
+//             ...currentUser,
+//             followers: followersRes,
+//             following: followingRes
+//         };
+//         res.json(finalCurrentUserObject);
+//     } catch(err) {
+//         next(err);
+//     }
+// }
+
 exports.get = async (req, res, next) => {
-    const currentUser = req.currentUser.toObject();
-    try {
-        const followersReq = Follow.count({followee: req.currentUser._id});
-        const followingReq = Follow.count({follower: req.currentUser._id});
-        const followersRes = await followersReq;
-        const followingRes = await followingReq;
-        const finalCurrentUserObject = {
-            ...currentUser,
-            followers: followersRes,
-            following: followingRes
-        };
-        res.json(finalCurrentUserObject);
-    } catch(err) {
-        next(err);
-    }
+    res.json(req.currentUser);
+    
 }
 
 // Allows user to update their info, however it is limited to certain fields, as some fields
@@ -234,6 +239,21 @@ exports.unfollowUser = async (req, res, next) => {
     }
 }
 
+exports.getAllFollows = async (req, res, next) => {
+    try {
+        const follows = await Follow.find({
+            follower: req.currentUser._id
+        })
+        .populate('followee')
+        .exec();
+
+        const reduced = follows.map(follow => follow.followee);
+        res.json(reduced);
+    } catch (err) {
+        next(err);
+    } 
+}
+
 
 // beginning of logic for /kudos/ 
 
@@ -295,6 +315,25 @@ exports.removeKudos = async (req, res, next) => {
     try {
         const removed = await req.kudos.remove();
         res.status(204).send();
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getAllKudos = async (req, res, next) => {
+    try {
+        const kudos = await Kudos.find({
+            user: req.currentUser._id,
+        })
+        .populate({
+            path: 'post',
+            select: '-text',
+            populate: {
+                path: 'author'
+            }
+        })
+        .exec();
+        res.json(kudos);
     } catch (err) {
         next(err);
     }
@@ -366,11 +405,31 @@ exports.deleteHighlight = async (req, res, next) => {
     }
 }
 
+exports.getAllHighlights = async (req, res, next) => {
+    try {
+        const highlights = await Highlight.find({user: req.currentUser._id})
+        .populate('user')
+        .populate({
+            path: 'post',
+            select: '-text',
+            populate: {
+                path: 'author'
+            }
+        })
+        .exec();
+
+        res.json(highlights);
+    } catch (err) {
+        next(err);
+    }
+}
+
 exports.updateImage = async (req, res, next) => {
     try {
         const updated = await User.findByIdAndUpdate(
             req.currentUser._id, 
             {avatar: `${config.staticUrl}${req.file.filename}`},
+            //{avatar: `${config.staticUrl}${req.file.filename}`},
             {upsert: true, new: true}
         )
         .exec();

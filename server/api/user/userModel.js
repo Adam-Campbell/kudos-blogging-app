@@ -15,7 +15,8 @@ const UserSchema = new Schema({
     },
 
     email: {
-        type: String
+        type: String,
+        select: false
     },
 
     bio: {
@@ -29,7 +30,7 @@ const UserSchema = new Schema({
 
     avatar: {
         type: String,
-        default: null
+        default: 'http://localhost:5000/default-avatar.jpg'
     },
 
     resetPasswordToken: {
@@ -53,6 +54,13 @@ const UserSchema = new Schema({
 UserSchema.pre('save', function(next) {
     if (!this.isModified('password')) return next();
     this.password = this.encryptPassword(this.password);
+    next();
+});
+
+UserSchema.post('save', function(error, doc, next) {
+    if (error.name === 'BulkWriteError' && error.code === 11000) {
+        return next(new Error('Duplicate username'));
+    }
     next();
 });
   

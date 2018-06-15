@@ -8,7 +8,6 @@ const storage = multer.diskStorage({
         const unique_id = crypto.randomBytes(20).toString('hex');
         req.unique_id = unique_id;
         cb(null, `${unique_id}${path.extname(file.originalname)}`);
-        //cb(null, `${req.currentUser._id}${path.extname(file.originalname)}`);
     }
 });
 

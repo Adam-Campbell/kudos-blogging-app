@@ -42,6 +42,7 @@ passport.use(new JwtStrategy({
         try {
             const currentUser = await User.findById(jwt_payload)
             .select('-password')
+            .select('+email')
             .exec();
             if (!currentUser) {
                 return done(null, false);

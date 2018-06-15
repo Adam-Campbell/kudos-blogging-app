@@ -5,6 +5,7 @@ module.exports = {
     db: {
       url: 'mongodb://localhost/mediumclone'
     },
-    staticUrl: 'http://localhost:3000/'
+    //staticUrl: `http://localhost:${process.env.PORT}/`
+    staticUrl: `http://192.168.1.67:${process.env.PORT}/`
   };
   

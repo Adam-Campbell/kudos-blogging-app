@@ -65,9 +65,10 @@ exports.post = async (req, res, next) => {
             password,
             email
         });
-        const userObject = newUser.toObject();
-        delete userObject.password;
-        res.json(userObject);
+        //const userObject = newUser.toObject();
+        //delete userObject.password;
+        //res.json(userObject);
+        next();
     } catch (err) {
         next(err);
     }
