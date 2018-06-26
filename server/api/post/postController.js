@@ -150,7 +150,17 @@ exports.put = async (req, res, next) => {
 
 exports.post = async (req, res, next) => {
     const strippedBody = mergeApprovedFields(
-        ['title', 'text', 'category', 'description', 'image'],
+        //['title', 'text', 'category', 'description', 'image'],
+        [
+            'titleText',
+            'titleRaw',
+            'descriptionText',
+            'descriptionRaw',
+            'image',
+            'bodyRaw',
+            'category',
+            'isInline'
+        ],
         req.body,
         {}
     );
