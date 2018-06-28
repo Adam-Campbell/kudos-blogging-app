@@ -85,7 +85,17 @@ exports.put = async (req, res, next) => {
 
     try {
         const saved = await mergeApprovedFields(
-            ['title', 'text', 'category', 'description', 'image'],
+            [
+                'titleText',
+                'titleRaw',
+                'descriptionText',
+                'descriptionRaw',
+                'image',
+                'bodyRaw',
+                'bodyObject',
+                'category',
+                'isInline'
+            ],
             req.body, 
             req.post
         )
@@ -150,7 +160,18 @@ exports.put = async (req, res, next) => {
 
 exports.post = async (req, res, next) => {
     const strippedBody = mergeApprovedFields(
-        ['title', 'text', 'category', 'description', 'image'],
+        //['title', 'text', 'category', 'description', 'image'],
+        [
+            'titleText',
+            'titleRaw',
+            'descriptionText',
+            'descriptionRaw',
+            'image',
+            'bodyRaw',
+            'bodyObject',
+            'category',
+            'isInline'
+        ],
         req.body,
         {}
     );

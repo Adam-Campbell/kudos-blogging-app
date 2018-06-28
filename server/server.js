@@ -10,7 +10,7 @@ const auth = require('./auth/routes');
 require('mongoose').connect(config.db.url);
 
 if (config.seed) {
-  require('./util/seed');
+  //require('./util/seed');
 }
 
 // setup the app middlware
