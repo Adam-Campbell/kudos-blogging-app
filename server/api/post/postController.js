@@ -92,7 +92,6 @@ exports.put = async (req, res, next) => {
                 'descriptionRaw',
                 'image',
                 'bodyRaw',
-                'bodyObject',
                 'category',
                 'isInline'
             ],
@@ -168,7 +167,6 @@ exports.post = async (req, res, next) => {
             'descriptionRaw',
             'image',
             'bodyRaw',
-            'bodyObject',
             'category',
             'isInline'
         ],
