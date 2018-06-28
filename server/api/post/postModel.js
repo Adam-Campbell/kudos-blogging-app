@@ -1,6 +1,33 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+function bodyObjectValidatorFunction(val) {
+    //console.log(val);
+    const props = Object.getOwnPropertyNames(val);
+    console.log(props);
+    // confirm that no extra fields are present
+    if (props.length !== 2) {
+        return false;
+    }
+    // confirm that one of the fields is the blocks field
+    if (!props.includes('blocks')) {
+        return false;
+    }
+    // confirm that the other field is entityMap
+    if (!props.includes('entityMap')) {
+        return false;
+    }
+    // if all tests are passed then return true
+    return true;
+}
+
+const bodyObjectValidatorErrMsg = `
+    It looks like the data you supplied to the bodyObject field isn't valid. 
+    This field should only ever be supplied with data exported from theDraftJS 
+    editor, and never with manually constructed data.`;
+
+const bodyObjectValidator = [bodyObjectValidatorFunction, bodyObjectValidatorErrMsg];
+
 const PostSchema = new Schema({
     titleText: {
         type: String,
@@ -30,6 +57,11 @@ const PostSchema = new Schema({
     bodyRaw: {
         type: String,
         required: true
+    },
+
+    bodyObject: {
+        type: Schema.Types.Mixed,
+        validate: bodyObjectValidator
     },
 
     author: {
@@ -65,7 +97,8 @@ const PostSchema = new Schema({
         required: true
     }
 
-});
+},
+{minimize: false});
 
 module.exports = mongoose.model('post', PostSchema);
 
