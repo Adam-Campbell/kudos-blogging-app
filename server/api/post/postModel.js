@@ -1,32 +1,51 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-function bodyObjectValidatorFunction(val) {
-    //console.log(val);
+function rawValidatorFunction(val) {
+    // more sophisticated validation to be implemented. For now it just checks shallow equality.
     const props = Object.getOwnPropertyNames(val);
     console.log(props);
     // confirm that no extra fields are present
     if (props.length !== 2) {
         return false;
     }
-    // confirm that one of the fields is the blocks field
-    if (!props.includes('blocks')) {
-        return false;
-    }
-    // confirm that the other field is entityMap
-    if (!props.includes('entityMap')) {
+    // confirm that the object includes the fields 'blocks' and 'entityMap'
+    if (!props.includes('blocks') || !props.includes('entityMap')) {
         return false;
     }
     // if all tests are passed then return true
     return true;
 }
 
-const bodyObjectValidatorErrMsg = `
-    It looks like the data you supplied to the bodyObject field isn't valid. 
-    This field should only ever be supplied with data exported from theDraftJS 
+const rawValidatorErrMsg = `
+    It looks like the data you supplied to the isn't valid. The titleRaw, descriptionRaw 
+    and bodyRaw fields should only ever be supplied with data exported from theDraftJS 
     editor, and never with manually constructed data.`;
 
-const bodyObjectValidator = [bodyObjectValidatorFunction, bodyObjectValidatorErrMsg];
+const rawValidator = [rawValidatorFunction, rawValidatorErrMsg];
+
+
+function imageObjectValidatorFunction(val) {
+    // more sophisticated validation to be implemented. For now it just checks shallow equality.
+    const props = Object.getOwnPropertyNames(val);
+    console.log(props);
+    // confirm that no extra fields are present
+    if (props.length !== 3) {
+        return false;
+    }
+    // confirm that the object includes the fields 'original', 'card' and 'thumbnail'
+    if (!props.includes('original') || !props.includes('card') || !props.includes('thumbnail')) {
+        return false;
+    }
+    // if all tests are passed then return true
+    return true;
+}
+
+const imageObjectValidatorErrMsg = `
+    It looks like the data you supplied to the image field isn't valid. This field should
+    only be supplied with the data returned from the /api/upload endpoint.`;
+
+const imageObjectValidator = [imageObjectValidatorFunction, imageObjectValidatorErrMsg];
 
 const PostSchema = new Schema({
     titleText: {
@@ -35,7 +54,8 @@ const PostSchema = new Schema({
     },
 
     titleRaw: {
-        type: String,
+        type: Schema.Types.Mixed,
+        validate: rawValidator,
         required: true
     },
 
@@ -45,23 +65,21 @@ const PostSchema = new Schema({
     },
 
     descriptionRaw: {
-        type: String,
+        type: Schema.Types.Mixed,
+        validate: rawValidator,
         required: true
     },
 
     image: {
-        type: String,
+        type: Schema.Types.Mixed,
+        validate: imageObjectValidator,
         required: true
     },
 
     bodyRaw: {
-        type: String,
-        required: true
-    },
-
-    bodyObject: {
         type: Schema.Types.Mixed,
-        validate: bodyObjectValidator
+        validate: rawValidator,
+        required: true
     },
 
     author: {
@@ -101,50 +119,3 @@ const PostSchema = new Schema({
 {minimize: false});
 
 module.exports = mongoose.model('post', PostSchema);
-
-
-
-// const PostSchema = new Schema({
-//     title: {
-//         type: String,
-//         required: true,
-//         unique: true
-//     },
-
-//     description: {
-//         type: String
-//     },
-
-//     image: {
-//         type: String
-//     },
-
-//     text: {
-//         type: String,
-//         required: true
-//     },
-
-//     author: {type: Schema.Types.ObjectId, ref: 'user'},
-    
-//     // I should make categories an array of strings, and validate each one
-//     // againt a regex containing all the categories I have. 
-//     //categories: [{type: Schema.Types.ObjectId, ref: 'category'}]
-//     category: {
-//         type: String,
-//         enum: [
-//             'javascript', 
-//             'fantasy', 
-//             'games', 
-//             'news',
-//             'fashion',
-//             'travel',
-//             'motivation',
-//             'relationships',
-//             'design',
-//             'politics',
-//             'mentalhealth',
-//             'music'
-//         ]
-//     }
-
-// });
