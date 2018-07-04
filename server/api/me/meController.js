@@ -248,7 +248,10 @@ exports.getAllFollows = async (req, res, next) => {
         .exec();
 
         const reduced = follows.map(follow => follow.followee);
-        res.json(reduced);
+        res.json({
+            follows: reduced,
+            user_id: req.currentUser._id
+        });
     } catch (err) {
         next(err);
     } 
@@ -333,7 +336,10 @@ exports.getAllKudos = async (req, res, next) => {
             }
         })
         .exec();
-        res.json(kudos);
+        res.json({
+            kudos: kudos,
+            user_id: req.currentUser._id
+        });
     } catch (err) {
         next(err);
     }
@@ -418,7 +424,10 @@ exports.getAllHighlights = async (req, res, next) => {
         })
         .exec();
 
-        res.json(highlights);
+        res.json({
+            highlights: highlights,
+            user_id: req.currentUser._id
+        });
     } catch (err) {
         next(err);
     }

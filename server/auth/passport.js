@@ -36,7 +36,10 @@ passport.use(new LocalStrategy({
 passport.use(new JwtStrategy({
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
         secretOrKey: config.secrets.jwt,
-        passReqToCallback: true
+        passReqToCallback: true,
+        jsonWebTokenOptions: {
+            maxAge: '10h'
+        }
     },
     async (req, jwt_payload, done) => {
         try {
