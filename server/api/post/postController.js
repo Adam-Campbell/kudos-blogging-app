@@ -53,8 +53,12 @@ exports.params = async (req, res, next, id) => {
 // all posts from all categories. If you hit it with a query string containing
 // a valid category it will give you only the posts for that category. 
 exports.get = async (req, res, next) => {
+    //console.log(req.headers.cookie);
+    //console.log('req.cookies is ' + req.cookies);
+    //console.log(req.cookies);
     // set query to the supplied category if there was one, or else
     // just an empty object.
+    console.log(req.cookies);
     const query = req.query.category ?
     { category: req.query.category } :
     {};
@@ -64,6 +68,13 @@ exports.get = async (req, res, next) => {
         .populate('author')
         .exec();
 
+        // res.cookie('foo', 'bar', { maxAge: 900000, domain: 'http://localhost:3000', httpOnly: false, secure: false });
+        // console.log(res);
+        // res.json(posts);
+        //res.json(posts);
+        //res.set('Set-Cookie', `postsCookieWithOptions=yesyesyes; Expires=${new Date(Date.now() + 36000000).toUTCString()}; Path=/`);
+        //res.set('Set-Cookie', 'cookieFromApp=yeah');
+        //console.log(res);
         res.json(posts);
     } catch (err) {
         next(err);

@@ -33,8 +33,22 @@ passport.use(new LocalStrategy({
     }
 ));
 
+function fromCookie(req) {
+    //console.log('fromCookie was called');
+    //console.log(req.headers);
+    //console.log(req.headers);
+    if (req.cookies) {
+        //console.log('condition was met');
+        //console.log(req.cookies);
+        const { token } = req.cookies;
+        //console.log(token);
+        return token;
+    }
+}
+
 passport.use(new JwtStrategy({
-        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        //jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        jwtFromRequest: fromCookie,
         secretOrKey: config.secrets.jwt,
         passReqToCallback: true,
         jsonWebTokenOptions: {
@@ -42,6 +56,7 @@ passport.use(new JwtStrategy({
         }
     },
     async (req, jwt_payload, done) => {
+        console.log(req.cookies);
         try {
             const currentUser = await User.findById(jwt_payload)
             .select('-password')

@@ -83,6 +83,11 @@ exports.signToken = signToken;
 
 exports.signin = (req, res, next) => {
   const token = signToken(req.currentUser._id);
-  res.json({token: token});
+  //console.log(req.cookies);
+  res.cookie('token', token, { maxAge: 3600000, domain: 'localhost', httpOnly: false, secure: false }).json({token: token});
+  //res.cookie('foo', 'bar')
+  //res.json({token: token});
+  //console.log(res);
+  //.json({token: token});
 }
 
