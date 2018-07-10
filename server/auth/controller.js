@@ -75,19 +75,110 @@ const signToken = id => {
   return jwt.sign(
     {_id: id},
     config.secrets.jwt,
-    {expiresIn: config.expiresIn}
+    {expiresIn: config.expiresIn.accessToken}
+  );
+}
+
+const signRefreshToken = id => {
+  return jwt.sign(
+    {_id: id},
+    config.secrets.refreshToken,
+    {expiresIn: config.expiresIn.refreshToken}
   );
 }
 
 exports.signToken = signToken;
 
+// exports.signin = (req, res, next) => {
+//   const token = signToken(req.currentUser._id);
+//   res.cookie('token', token, { maxAge: 3600000, domain: 'localhost', httpOnly: true, secure: false });
+//   res.json({token: token});
+// }
+
 exports.signin = (req, res, next) => {
   const token = signToken(req.currentUser._id);
-  //console.log(req.cookies);
-  res.cookie('token', token, { maxAge: 3600000, domain: 'localhost', httpOnly: false, secure: false }).json({token: token});
-  //res.cookie('foo', 'bar')
+  const refreshToken = signRefreshToken(req.currentUser._id);
+  res.cookie('refreshToken', refreshToken, { maxAge: 3600000, domain: 'localhost', httpOnly: true, secure: false });
+  res.cookie('token', token, { maxAge: 30000, domain: 'localhost', httpOnly: true, secure: false });
+  res.status(204).send();
   //res.json({token: token});
-  //console.log(res);
-  //.json({token: token});
 }
 
+
+/*
+Handle JWTs and refresh token. 
+
+- Check req.cookies for the JWT and refresh token.
+
+- If the JWT is present and valid, decode and use the resulting _id payload to look up the user.
+Add the user to the req object and pass control to the next middleware.
+
+- If the JWT is missing, invalid, expired etc, check for refresh token. If refresh token is present
+and valid, decode and use the resulting _id to generate a new token. Also look up the user, and add 
+them to the req object. Use req.cookie to set the new token as a cookie on the response. Pass control 
+to the next middleware.
+
+- If there is no JWT or refresh token then there is no authorised user, so just return 401.
+
+*/
+
+function verifyToken(token) {
+  return jwt.verify(
+    token,
+    config.secrets.jwt
+  );
+}
+
+function verifyRefreshToken(refreshToken) {
+  return jwt.verify(
+    refreshToken, 
+    config.secrets.refreshToken
+  );
+}
+
+async function jwtAuthMiddleware(req, res, next) {
+  if (req && req.cookies) {
+    const { token, refreshToken } = req.cookies;
+    if (token && token !== 'null') {
+      try {
+        const _id = verifyToken(token)._id;
+        const currentUser = await User.findById(_id)
+        .select('-password')
+        .select('+email')
+        .exec();
+        if (!currentUser) {
+          return res.status(401).send();
+        }
+        console.log(currentUser);
+        req.currentUser = currentUser;
+        return next();
+      } catch (err) {
+        return next(err);
+      }
+    } else if (refreshToken) {
+      try {
+        const _id = verifyRefreshToken(refreshToken);
+        console.log(_id)
+        const newToken = signToken(_id);
+        const currentUser = await User.findById(_id)
+        .select('-password')
+        .select('+email')
+        .exec();
+        console.log(currentUser);
+        if (!currentUser) {
+          return res.status(401).send();
+        }
+        req.currentUser = currentUser;
+        res.cookie('token', newToken, { maxAge: 30000, domain: 'localhost', httpOnly: true, secure: false });  
+        return next();
+      } catch (err) {
+        return next(err);
+      }
+    } else {
+      return res.status(401).send();
+    }
+  }
+  return res.status(401).send();
+}
+
+exports.jwtAuthMiddleware = jwtAuthMiddleware;

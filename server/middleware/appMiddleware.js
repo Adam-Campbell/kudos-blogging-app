@@ -11,10 +11,10 @@ module.exports = app => {
   if (config.logging) {
     app.use(morgan('dev'));
   }
-  app.use(cookieParser());
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(bodyParser.json());
   app.use(cors({ origin: true, credentials: true }));
+  app.use(cookieParser());
   app.use(passport.initialize());
   //app.use(cors());
 };

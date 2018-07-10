@@ -58,7 +58,6 @@ exports.get = async (req, res, next) => {
     //console.log(req.cookies);
     // set query to the supplied category if there was one, or else
     // just an empty object.
-    console.log(req.cookies);
     const query = req.query.category ?
     { category: req.query.category } :
     {};
@@ -239,7 +238,7 @@ exports.postComment = async (req, res, next) => {
     try {
         const newComment = await Comment.create({
             text: req.body.text,
-            author: req.user._id,
+            author: req.currentUser._id,
             discussion: req.post._id,
             _id: objectId,
             parents: [objectId]

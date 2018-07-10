@@ -21,6 +21,11 @@ require('./middleware/appMiddleware')(app);
 //   next();
 // });
 // setup the api
+app.use('*', function(req, res, next) {
+  console.log('cookie logger called');
+  console.log(req.cookies);
+  next();
+});
 app.use('/api', api);
 app.use('/auth', auth);
 // set up global error handling
