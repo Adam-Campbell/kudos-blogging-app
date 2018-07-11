@@ -4,9 +4,14 @@ const config = {
   prod: 'production',
   port: process.env.PORT || 3000,
   // 10 days in minutes
-  expiresIn: 60 * 60,
+  expiresIn: {
+    //accessToken: '10h',
+    accessToken: 30,
+    refreshToken: '7d'
+  },
   secrets: {
-    jwt: process.env.JWT || 'gumball'
+    jwt: process.env.JWT || 'gumball',
+    refreshToken: process.env.refreshTokenSecret || 'scarlet'
   },
   googleAuth: {
     clientId: process.env.googleClientId,

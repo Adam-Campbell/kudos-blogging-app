@@ -33,12 +33,25 @@ passport.use(new LocalStrategy({
     }
 ));
 
+function fromCookie(req) {
+    let token = null;
+    if (req && req.cookies) {
+        token = req.cookies.token;
+    }
+    return token;
+}
+
 passport.use(new JwtStrategy({
-        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        //jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        jwtFromRequest: fromCookie,
         secretOrKey: config.secrets.jwt,
-        passReqToCallback: true
+        passReqToCallback: true,
+        jsonWebTokenOptions: {
+            maxAge: '10h'
+        }
     },
     async (req, jwt_payload, done) => {
+        //console.log(req.cookies);
         try {
             const currentUser = await User.findById(jwt_payload)
             .select('-password')
